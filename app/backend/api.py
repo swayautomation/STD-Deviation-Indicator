@@ -1,6 +1,6 @@
 # api.py
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -11,6 +11,7 @@ from fastapi import UploadFile, File
 from fastapi.responses import FileResponse
 import json
 import plc_control
+import asyncio
 
 app = FastAPI()
 
@@ -51,24 +52,36 @@ def live():
     return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
 
 @app.get("/live_process")
-def live_process():
-    def generate():
-        while True:
+async def live_process(request: Request):
+
+    async def generate():
+
+        while inspection.SYSTEM_RUNNING:
+
+            # Detect browser disconnect
+            if await request.is_disconnected():
+                print("Client disconnected from /live_process")
+                break
+
             with inspection.JPEG_LOCK:
                 frame = inspection.LATEST_JPEG_PROCESS
+
             if frame:
                 yield (
                     b"--frame\r\n"
                     b"Content-Type: image/jpeg\r\n\r\n"
                     + frame + b"\r\n"
                 )
-            time.sleep(0.1)
+
+            await asyncio.sleep(0.1)
+
+        print("Stream generator exited")
+
     return StreamingResponse(
         generate(),
         media_type="multipart/x-mixed-replace; boundary=frame",
         headers={"Cache-Control": "no-cache"},
     )
-
 @app.get("/status")
 def status():
     return {"running": inspection.SYSTEM_RUNNING}
