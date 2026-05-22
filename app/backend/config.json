@@ -1,0 +1,59 @@
+{
+  "target_device_user_id": "Cam1",
+  "use_external_trigger": true,
+  "trigger_source": "Line0",
+  "trigger_activation": "RisingEdge",
+  "pixel_format": "BayerRG8",
+  "frame_width": 1100,
+  "frame_height": 856,
+  "roi_offset_x": 648,
+  "roi_offset_y": 816,
+  "exposure_time_us": 5000,
+  "gain_db": 0,
+  "max_parallel_frames": 5,
+  "save_directory": "D:/Sway/Customer/SKB/pathcore/anomaly_detection/app/backend/output",
+  "save_format": "JPEG",
+  "jpeg_quality": 90,
+  "auto_exposure": false,
+  "auto_gain": false,
+  "white_balance_auto": false,
+  "roi_enable": true,
+  "wb_red_ratio": 1.5,
+  "wb_green_ratio": 1,
+  "wb_blue_ratio": 1.8,
+  "target_force_ip": "169.154.73.1",
+  "target_force_subnet": "255.255.255.0",
+  "target_force_gateway": "169.154.0.1",
+  "indicator_slots": [
+    {
+      "name": "Slot1",
+      "roi": [
+        352,
+        666,
+        102,
+        429
+      ],
+      "expected_color": "Green"
+    },
+    {
+      "name": "Slot2",
+      "roi": [
+        48,
+        341,
+        498,
+        784
+      ],
+      "expected_color": "Blue"
+    },
+    {
+      "name": "Slot3",
+      "roi": [
+        420,
+        721,
+        637,
+        941
+      ],
+      "expected_color": "Orange"
+    }
+  ]
+}
