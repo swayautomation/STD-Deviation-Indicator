@@ -88,6 +88,11 @@ COLOR_HSV_RANGES = {
 }
 
 FACE_STD_THRESHOLD = 58.0
+COLOR_STD_CONFIG = {
+    "Orange": {"threshold": 58.0, "operator": ">"},
+    "Blue":   {"threshold": 58.0, "operator": ">"},
+    "Green":  {"threshold": 58.0, "operator": ">"},
+}
 
 # Shared state globals
 
@@ -198,12 +203,20 @@ def _reload_config():
 
     INDICATOR_SLOTS = c.get("indicator_slots", [])
     
+    global COLOR_HSV_RANGES, COLOR_STD_CONFIG
     default_hsv = {
         "Orange": ([10,  100, 100], [25,  255, 255]),
         "Blue":   ([100, 100, 50],  [130, 255, 255]),
         "Green":  ([45,  50,  50],  [85,  255, 255]),
     }
     COLOR_HSV_RANGES = c.get("color_hsv_ranges", default_hsv)
+    
+    default_std_cfg = {
+        "Orange": {"threshold": 58.0, "operator": ">"},
+        "Blue":   {"threshold": 58.0, "operator": ">"},
+        "Green":  {"threshold": 58.0, "operator": ">"},
+    }
+    COLOR_STD_CONFIG = c.get("color_std_config", default_std_cfg)
     print(f"[INFO] Loaded {len(INDICATOR_SLOTS)} indicator slots.")
 
                         
@@ -360,7 +373,7 @@ def check_color_positions(bgr):
         })
     return results
 
-def check_top_bottom(bgr, roi, slot_name="slot"):
+def check_top_bottom(bgr, roi, slot_name="slot", color="Green"):
     y1, y2, x1, x2 = roi
     crop = bgr[y1:y2, x1:x2]
     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
@@ -396,7 +409,21 @@ def check_top_bottom(bgr, roi, slot_name="slot"):
         return {"label": "UNKNOWN", "score": 0.0}
 
     score = float(gray[inner_mask == 255].std())
-    label = "BOTTOM" if score > FACE_STD_THRESHOLD else "TOP"
+
+    color_cfg = COLOR_STD_CONFIG.get(color, {"threshold": FACE_STD_THRESHOLD, "operator": ">"})
+    if isinstance(color_cfg, (int, float)):
+        thresh = float(color_cfg)
+        op = ">"
+    else:
+        thresh = float(color_cfg.get("threshold", FACE_STD_THRESHOLD))
+        op = color_cfg.get("operator", ">")
+
+    if op == "<":
+        is_bottom = score < thresh
+    else:
+        is_bottom = score > thresh
+
+    label = "BOTTOM" if is_bottom else "TOP"
 
     # ==================== DEBUG WINDOW ====================
     p1 = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
@@ -706,7 +733,7 @@ class CameraController:
                 face_results = {}
                 for slot in color_results:
                     if slot["position_ok"]:
-                        face = check_top_bottom(bgr, slot["roi"], slot_name=slot["name"])
+                        face = check_top_bottom(bgr, slot["roi"], slot_name=slot["name"], color=slot["detected_color"])
                         face_results[slot["name"]] = face
                 face_ms = (perf_counter() - t0) * 1000
 

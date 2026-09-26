@@ -5,6 +5,7 @@ import styles from './IndicatorConfig.module.css'
 export default function IndicatorConfig() {
   const [slots, setSlots] = useState([])
   const [hsvRanges, setHsvRanges] = useState({})
+  const [stdConfig, setStdConfig] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   
@@ -33,6 +34,8 @@ export default function IndicatorConfig() {
       setSlots(data.indicator_slots || [])
       const hsvData = await api.getConfigColorHsvRanges()
       setHsvRanges(hsvData.color_hsv_ranges || {})
+      const stdData = await api.getConfigColorStdConfig()
+      setStdConfig(stdData.color_std_config || {})
     } catch (e) {
       console.error(e)
     } finally {
@@ -45,6 +48,7 @@ export default function IndicatorConfig() {
     try {
       await api.saveConfigIndicatorSlots(slots)
       await api.saveConfigColorHsvRanges(hsvRanges)
+      await api.saveConfigColorStdConfig(stdConfig)
       alert('Indicator configuration saved successfully!')
     } catch (e) {
       console.error(e)
@@ -61,6 +65,16 @@ export default function IndicatorConfig() {
     const newRanges = { ...hsvRanges }
     newRanges[color][type][idx] = newVal
     setHsvRanges(newRanges)
+  }
+
+  const updateStdConfig = (color, field, val) => {
+    setStdConfig(prev => ({
+      ...prev,
+      [color]: {
+        ...(prev[color] || { threshold: 58.0, operator: '>' }),
+        [field]: field === 'threshold' ? (parseFloat(val) || 0) : val
+      }
+    }))
   }
 
   const handleImageUpload = async (e) => {
@@ -339,13 +353,13 @@ export default function IndicatorConfig() {
         </label>
       </div>
 
-      {/* HSV Calibration Section */}
+      {/* HSV & STD Calibration Section */}
       {Object.keys(hsvRanges).length > 0 && (
         <div className={styles.hsvSection}>
           <div style={{ marginBottom: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: 16, color: '#1e293b' }}>Color HSV Calibration</h3>
+            <h3 style={{ margin: 0, fontSize: 16, color: '#1e293b' }}>Color HSV & STD Calibration</h3>
             <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#64748b' }}>
-              Fine-tune the Lower and Upper [Hue, Saturation, Value] boundaries for each color.
+              Fine-tune the Lower/Upper HSV boundaries and individual STD Thresholds (&gt; or &lt;) for each color.
             </p>
           </div>
           <div className={styles.hsvGrid}>
@@ -366,6 +380,26 @@ export default function IndicatorConfig() {
                   <input type="number" min="0" max="179" value={upper[0]} onChange={(e) => updateHsvRange(color, 1, 0, e.target.value)} title="Hue (0-179)" />
                   <input type="number" min="0" max="255" value={upper[1]} onChange={(e) => updateHsvRange(color, 1, 1, e.target.value)} title="Saturation (0-255)" />
                   <input type="number" min="0" max="255" value={upper[2]} onChange={(e) => updateHsvRange(color, 1, 2, e.target.value)} title="Value (0-255)" />
+                </div>
+                <div className={styles.hsvRow} style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed #cbd5e1' }}>
+                  <span className={styles.hsvLabel} style={{ fontWeight: '600', color: '#334155' }}>STD Thresh</span>
+                  <select
+                    value={stdConfig[color]?.operator || '>'}
+                    onChange={(e) => updateStdConfig(color, 'operator', e.target.value)}
+                    style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 'bold', background: '#f8fafc' }}
+                    title="Comparison operator: BOTTOM if score > threshold OR score < threshold"
+                  >
+                    <option value=">">&gt; (Greater)</option>
+                    <option value="<">&lt; (Less)</option>
+                  </select>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={stdConfig[color]?.threshold ?? 58.0}
+                    onChange={(e) => updateStdConfig(color, 'threshold', e.target.value)}
+                    style={{ flex: 1, minWidth: '60px' }}
+                    title="STD Threshold Value"
+                  />
                 </div>
               </div>
             ))}
