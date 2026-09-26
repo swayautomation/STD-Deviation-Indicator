@@ -55,5 +55,15 @@
       ],
       "expected_color": "Orange"
     }
-  ]
+  ],
+  "color_hsv_ranges": {
+    "Orange": [[10, 100, 100], [25, 255, 255]],
+    "Blue": [[100, 100, 50], [130, 255, 255]],
+    "Green": [[45, 50, 50], [85, 255, 255]]
+  },
+  "color_std_config": {
+    "Orange": { "threshold": 58.0, "operator": ">" },
+    "Blue": { "threshold": 58.0, "operator": ">" },
+    "Green": { "threshold": 58.0, "operator": ">" }
+  }
 }

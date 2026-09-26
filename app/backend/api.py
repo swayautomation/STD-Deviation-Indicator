@@ -250,6 +250,30 @@ def save_config_color_hsv_ranges(data: dict):
         print(f"Error reloading config: {e}")
     return {"status": "saved"}
 
+@app.get("/config/color_std_config")
+def get_config_color_std_config():
+    with open("config.json") as f:
+        cfg = json.load(f)
+    default_std_cfg = {
+        "Orange": {"threshold": 58.0, "operator": ">"},
+        "Blue": {"threshold": 58.0, "operator": ">"},
+        "Green": {"threshold": 58.0, "operator": ">"}
+    }
+    return {"color_std_config": cfg.get("color_std_config", default_std_cfg)}
+
+@app.put("/config/color_std_config")
+def save_config_color_std_config(data: dict):
+    with open("config.json", "r") as f:
+        cfg = json.load(f)
+    cfg["color_std_config"] = data.get("color_std_config", {})
+    with open("config.json", "w") as f:
+        json.dump(cfg, f, indent=2)
+    try:
+        inspection._reload_config()
+    except Exception as e:
+        print(f"Error reloading config: {e}")
+    return {"status": "saved"}
+
 @app.post("/config/reference_image")
 def upload_reference_image(file: UploadFile = File(...)):
     path = "reference_image.jpg"

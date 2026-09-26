@@ -65,6 +65,13 @@ export const saveConfigColorHsvRanges = (color_hsv_ranges) => fetch(`${BASE}/con
     body: JSON.stringify({ color_hsv_ranges })
 }).then(r => r.json())
 
+export const getConfigColorStdConfig = () => fetch(`${BASE}/config/color_std_config`).then(r => r.json())
+export const saveConfigColorStdConfig = (color_std_config) => fetch(`${BASE}/config/color_std_config`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ color_std_config })
+}).then(r => r.json())
+
 export const triggerPlc = () => fetch(`${BASE}/trigger_plc`, { method: 'POST' }).then(r => r.json())
 export const getNetworkConfig = () => fetch(`${BASE}/network/config`).then(r => r.json())
 export const saveNetworkConfig = (data) => fetch(`${BASE}/network/config`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json())
